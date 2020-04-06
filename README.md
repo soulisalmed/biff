@@ -11,14 +11,14 @@ biff requires the following modules :
   * odfpy
   
 
-"""
-$ git clone <repo>
-$ cd <repo>
-$ pip -r requirements.txt
-$ ./biff.py my_highlighted.pdf
-or
-$ python3 biff.py my_highlighted.pdf
-"""
+```
+$ git clone <repo>			
+$ cd <repo>			
+$ pip -r requirements.txt			
+$ ./biff.py my_highlighted.pdf			
+or			
+$ python3 biff.py my_highlighted.pdf			
+```
 
 The output odt file will be placed in the same directory as the pdf		
 
@@ -34,7 +34,7 @@ The output odt file will be placed in the same directory as the pdf
     
 ![alt text][pdf-odt]
 
-[pdf-odt]: https:// "PDF to ODT"
+[pdf-odt]: https://github.com/soulisalmed/biff/blob/master/pdf-odt.png "PDF to ODT"
 
   
 Enjoy and please send some feedback.
