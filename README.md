@@ -12,29 +12,29 @@ biff requires the following modules :
   
 
 ```
-$ git clone <repo>			
-$ cd <repo>			
+$ git clone https://github.com/soulisalmed/biff.git			
+$ cd biff			
 $ pip -r requirements.txt			
 $ ./biff.py my_highlighted.pdf			
 or			
 $ python3 biff.py my_highlighted.pdf			
 ```
 
-The output odt file will be placed in the same directory as the pdf		
+The output odt file will be placed in the same directory as the pdf.	
 
-## Recommandations for pdf highlight on the reMarkable				
-  * On reMarkable, use the Highlighter, all the other tools will not (and should not) be detected by biff.
+## Recommandations for pdf highlighting on the reMarkable tablet				
+  * On reMarkable, use the Highlighter. All the other tools will not (and should not) be detected by biff.
   * Make sure to cover all the text you want to extract. Partly covered text will not be extracted.
   * For figures, just draw a rectangle shape around it. The interior will be cropped and added as an image to the output odt.
-  * Formula will not be extracted as text but you can export them as images (see above).
+  * Formulas will not be extracted as such, but you can export them as images (see example below).
   * The quality of the result will depend on the pdf quality. Automatically generated pdf from scans will give poor results.
-  * export the PDF using USB web interface (for example) and `./biff.py your_pdf.pdf`
+  * Export the PDF using the reMarkable USB web interface (for example) and `./biff.py your_pdf.pdf`
   
      
     
 ![alt text][pdf-odt]
 
-[pdf-odt]: https://github.com/soulisalmed/biff/blob/master/pdf-odt.png "PDF to ODT"
+[pdf-odt]: https://github.com/soulisalmed/biff/blob/master/pdf-odt.png "Example"
 
   
 Enjoy and please send some feedback.
