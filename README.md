@@ -14,7 +14,7 @@ biff requires the following modules :
 ```
 $ git clone https://github.com/soulisalmed/biff.git			
 $ cd biff			
-$ pip install -r requirements.txt			
+$ pip3 install -r requirements.txt			
 $ ./biff.py my_highlighted.pdf			
 or			
 $ python3 biff.py my_highlighted.pdf			
