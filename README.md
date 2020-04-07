@@ -20,6 +20,14 @@ or
 $ python3 biff.py my_highlighted.pdf			
 ```
 
+For Windows users, you can use biff.exe directly.	
+On the command line (cmd.exe):		
+```
+biff.exe my_highlighted.pdf
+```
+	
+
+
 The output odt file will be placed in the same directory as the pdf.	
 
 ## Recommandations for pdf highlighting on the reMarkable tablet				
