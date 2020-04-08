@@ -9,18 +9,17 @@ biff requires the following modules :
   * pymupdf
   * numpy
   * odfpy
-  
+
+biff needs Python 3
 
 ```
 $ git clone https://github.com/soulisalmed/biff.git			
-$ cd biff			
-$ pip3 install -r requirements.txt			
-$ ./biff.py my_highlighted.pdf			
-or			
-$ python3 biff.py my_highlighted.pdf			
+$ cd biff		
+$ pip3 install -r requirements.txt					
+$ python3 -m biff my_highlighted.pdf			
 ```
 
-For Windows users, you can use biff.exe directly.	
+For Windows users, you can use win-dists\biff.exe directly.	
 On the command line (cmd.exe):		
 ```
 biff.exe my_highlighted.pdf

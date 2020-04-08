@@ -160,20 +160,25 @@ def extract_highlight_odf(name):
         rect,hierarchy=Page_Get_Rects(doc_mask,doc_text,name,i)
         if rect.shape[0]>0:
             textdoc=Page_Rect_get_Text_odf(doc_text,name,i,rect,hierarchy,textdoc,style_p,style_i)
-    textdoc.save(name.replace('.pdf','.odt'))
+            
+    textdoc.save(name.replace(".pdf",".odt"))
+    doc_mask.close()
+    doc_text.close()
+    
+def run():
+	parser=argparse.ArgumentParser(
+		description='''Extract highlighted text and framed images from PDF(s) generated with reMarkable tablet to Openoffice text document. Highlighted text will be exported as text. Framed areas will be cropped as images.''',
+		epilog="""  biff  Copyright (C) 2020  Louis DELMAS
+		This program comes with ABSOLUTELY NO WARRANTY.
+		This is free software, and you are welcome to redistribute it
+		under certain conditions; see COPYING for details.""")
+	parser.add_argument('pdf', nargs='*', help='PDF files')
+	args=parser.parse_args()
 
-parser=argparse.ArgumentParser(
-    description='''Extract highlighted text and framed images from PDF(s) generated with reMarkable tablet to Openoffice text document. Highlighted text will be exported as text. Framed areas will be cropped as images.''',
-    epilog="""  biff  Copyright (C) 2020  Louis DELMAS
-    This program comes with ABSOLUTELY NO WARRANTY.
-    This is free software, and you are welcome to redistribute it
-    under certain conditions; see COPYING for details.""")
-parser.add_argument('pdf', nargs='*', help='PDF files')
-args=parser.parse_args()
+	for i in range(1,len(argv)):
+		if argv[i].endswith(".pdf"):
+			print(f"converting {argv[i]} ...")
+			extract_highlight_odf(argv[i])
+		else:
+			print(f"{argv[i]} is not a pdf")
 
-for i in range(1,len(argv)):
-	if argv[i].endswith(".pdf"):
-		print(f"converting {argv[i]} ...")
-		extract_highlight_odf(argv[i])
-	else:
-		print(f"{argv[i]} is not a pdf")
