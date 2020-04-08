@@ -19,10 +19,10 @@ $ pip3 install -r requirements.txt
 $ python3 -m biff my_highlighted.pdf			
 ```
 
-For Windows users, you can use win-dists\biff.exe directly.	
+For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v1.0).	
 On the command line (cmd.exe):		
 ```
-biff.exe my_highlighted.pdf
+biff_v1.0.exe my_highlighted.pdf
 ```
 	
 
