@@ -1,9 +1,16 @@
-# BIFF		
-		
-Extract text and images from highlighted pdf generated with reMarkable tablet.		
+# BIFF		 
+
+Extract text and images from highlighted pdf generated with reMarkable tablet.	
+
+## Version
+
+### Version 2
+ * Add an option for two columns pdf.
+ * Add an option to increase quality of cropped images.
+ * Improvements on some artifacts
 		
 ## Installation and usage	
-		
+
 biff requires the following modules : 		
   * opencv-python
   * pymupdf
@@ -18,6 +25,25 @@ $ cd biff
 $ pip3 install -r requirements.txt					
 $ python3 -m biff my_highlighted.pdf			
 ```
+Usage:
+```
+usage: __main__.py [-h] [-c] [-q QUALITY] [pdf [pdf ...]]
+
+Extract highlighted text and framed images from PDF(s) generated with
+reMarkable tablet to Openoffice text document. Highlighted text will be
+exported as text. Framed areas will be cropped as images.
+
+positional arguments:
+  pdf                   PDF files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c, --two-columns     For two-columns pdf, parse colums from left to right
+  -q QUALITY, --quality QUALITY
+                        Quality of extracted images, default=2 higher values
+                        for higher quality
+
+```
 
 For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v1.0).	
 On the command line (cmd.exe):		
@@ -29,7 +55,8 @@ biff_v1.0.exe my_highlighted.pdf
 
 The output odt file will be placed in the same directory as the pdf.	
 
-## Recommandations for pdf highlighting on the reMarkable tablet				
+## Recommandations for pdf highlighting on the reMarkable tablet	
+
   * On reMarkable, use the Highlighter. All the other tools will not (and should not) be detected by biff.
   * Make sure to cover all the text you want to extract. Partly covered text will not be extracted.
   * For figures, just draw a rectangle shape around it. The interior will be cropped and added as an image to the output odt.
