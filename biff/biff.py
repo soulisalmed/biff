@@ -31,8 +31,9 @@ from odf.text import P
 from odf.draw import Frame, Image
 import argparse
 from sys import argv
+import os
 
-def Page_Get_Rects(doc,doc_text,name,page):
+def Page_Get_Highlights(doc,doc_text,page):
     cont=b""
     page=doc[page]
     for xref in page._getContents():
@@ -50,14 +51,31 @@ def Page_Get_Rects(doc,doc_text,name,page):
             doc_text._deleteObject(xref)
         else:
             doc._deleteObject(xref)
+    return doc,doc_text
 
-    pix=page.getPixmap()
+def Page_Get_Rects(page,col):
+    if col==1:
+        x1,y1,x2,y2=page.CropBox
+        x2/=2
+        crop_rect=Rect(x1,y1,x2,y2)
+        pix=page.getPixmap(clip=crop_rect)
+        
+    elif col==2:
+        x1,y1,x2,y2=page.CropBox
+        x1=x2/2
+        crop_rect=Rect(x1,y1,x2,y2)
+        pix=page.getPixmap(clip=crop_rect)
+          
+    else:
+        pix=page.getPixmap(clip=page.CropBox)
+        
     pix=pix.getPNGData()
     nparr = frombuffer(pix, uint8)
     img = 255-imdecode(nparr,0)
     kernel = ones((3,3), uint8)
-    img=dilate(img,kernel,iterations = 2)
-    img=erode(img,kernel,iterations = 2)
+    #strqtegy is now to not print images too small
+    #img=dilate(img,kernel,iterations = 2)
+    #img=erode(img,kernel,iterations = 2)
     contour,hierarchy = findContours(img,RETR_CCOMP,CHAIN_APPROX_SIMPLE)
     nb_contour=len(contour)
     rects=empty((nb_contour,4))
@@ -73,10 +91,14 @@ def Page_Get_Rects(doc,doc_text,name,page):
     for i in range(nb_contour):
         rects_sorted[i]=rects[ind_sorted[i]]
         hierarchy_sorted[i]=hierarchy[0,ind_sorted[i],:]
+    
+    if col==2:
+        rects_sorted[:,0]+=x1
+        rects_sorted[:,2]+=x1
         
     return rects_sorted,hierarchy_sorted
 
-def Page_Rect_get_Text(doc,name,page_num,rects,output):
+def Page_Rect_get_Text(doc,page_num,rects,output):
     page=doc[page_num]
     words = page.getText("words")
     output.write("_"*30+"\n")
@@ -92,40 +114,54 @@ def Page_Rect_get_Text(doc,name,page_num,rects,output):
             output.write("\n")
 
 
-def Page_Rect_get_Text_odf(doc,name,page_num,rects,hierarchy,output,style_p,style_i):
+def Page_Rect_get_Text_odf(doc,page_num,rects,hierarchy,output,style_p,style_i,img_quality,col):
     page=doc[page_num]
     words = page.getText("words")
-    output.text.addElement(P(stylename=style_p,text="_"*30))
-    output.text.addElement(P(stylename=style_p,text=f"page {page_num+1}"))
+    output.text.addElement(P(stylename=style_p,text="_"*60))
+    if col==1 or col==2:
+        output.text.addElement(P(stylename=style_p,text=f"page {page_num+1} - column {col}"))
+    else:
+        output.text.addElement(P(stylename=style_p,text=f"page {page_num+1}"))
     for i in range(rects.shape[0]):
         if hierarchy[i,3]==-1:
-            output.text.addElement(P(stylename=style_p,text=""))
             rect=Rect(rects[i,0],rects[i,1],rects[i,2],rects[i,3])
             mywords = [w for w in words if Rect(w[:4]) in rect]
             mywords.sort(key=itemgetter(3, 0))  # sort by y1, x0 of the word rect
             group = groupby(mywords, key=itemgetter(3))
+            
+            output.text.addElement(P(stylename=style_p,text=""))
             out_text=P(stylename=style_p,text="")
             for y1, gwords in group:
                 out_text.addText(" ".join(w[4] for w in gwords).replace("\n"," "))
                 out_text.addText(" ")
             output.text.addElement(out_text)
         if hierarchy[i,3]!=-1:
-            output.text.addElement(P(stylename=style_p,text=""))
-            out_img=P()
-            ncc=i
-            clip = Rect(rects[ncc,0],rects[ncc,1],rects[ncc,2],rects[ncc,3])
-            pix = page.getPixmap(matrix=Matrix(2,2),clip=clip)
-            name_image=f"Pictures/image-{page.number}-{i}.png"
+
+            clip = Rect(rects[i,0],rects[i,1],rects[i,2],rects[i,3])
+            #taking into account quality
+            pix = page.getPixmap(matrix=Matrix(img_quality,img_quality),clip=clip)
+            
+            name_image=f"Pictures/image-{page.number}-{col}{i}.png"
             pix_png=pix.getPNGData()
             h=pix.height/pix.xres
             w=pix.width/pix.yres
-            frame=Frame(stylename=style_i, width=f"{w}in",height=f"{h}in",anchortype="paragraph")
-            href=output.addPicture(name_image,mediatype="png",content=pix_png)#
-            frame.addElement(Image(href=f"./{href}"))
-            out_img.addElement(frame)
-            output.text.addElement(out_img)
+            #if quality is larger than 2 keep the frame the same as if it was 2
+            h*=2/img_quality
+            w*=2/img_quality
+            #if image is too small (h<20px) it is probably an artifact
+            #so do not print it
+            if pix.height*2/img_quality>20:
+                output.text.addElement(P(stylename=style_p,text=""))
+                out_img=P()
+                frame=Frame(stylename=style_i, width=f"{w}in",height=f"{h}in",anchortype="paragraph")
+                href=output.addPicture(name_image,mediatype="png",content=pix_png)#
+                frame.addElement(Image(href=f"./{href}"))
+                out_img.addElement(frame)
+                output.text.addElement(out_img)
     return output
             
+"""
+OLD
 def extract_highlight(name):
     open(f"{name}.txt", 'w').close()
     output=open(f"{name}.txt","a")
@@ -137,48 +173,69 @@ def extract_highlight(name):
         if rect.shape[0]>0:
             Page_Rect_get_Text(doc_text,name,i,rect,output)
     output.close()
+"""
 
-def extract_highlight_odf(name):
+def extract_highlight_odf(name,img_quality,two_col):
     textdoc = OpenDocumentText()
     doc_mask=fitzopen(name)
     doc_text=fitzopen(name)
     nb_pages=doc_text.pageCount
-    
+    #create style for paragraph
     style_p=Style(name="P1",family="paragraph",parentstylename="Standard")
     p_prop = ParagraphProperties(textalign="justify",justifysingleword="false")
     style_p.addElement(p_prop)
     textdoc.automaticstyles.addElement(style_p)
     
+    #create style for images
     style_i=Style(name="fr1", family="graphic", parentstylename="Graphics")
     i_prop=GraphicProperties(wrap="none",runthrough="foreground", horizontalpos="center",horizontalrel="paragraph")
     style_i.addElement(i_prop)
     textdoc.automaticstyles.addElement(style_i)
     
+    #insert pdf file name
     textdoc.text.addElement(P(stylename=style_p,text=f"{name}\n\n"))
-
+     
     for i in range(nb_pages):
-        rect,hierarchy=Page_Get_Rects(doc_mask,doc_text,name,i)
-        if rect.shape[0]>0:
-            textdoc=Page_Rect_get_Text_odf(doc_text,name,i,rect,hierarchy,textdoc,style_p,style_i)
+        #isolate highlights in _mask and text in _text
+        doc_mask,doc_text=Page_Get_Highlights(doc_mask,doc_text,i)
+        
+        if two_col==True:
+            #colonnes
+            for col in [1,2]:
+                rect,hierarchy=Page_Get_Rects(doc_mask[i],col)
+
+                if rect.shape[0]>0:
+                    textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,textdoc,style_p,style_i,img_quality,col)
+        else:
+            col=0
+            rect,hierarchy=Page_Get_Rects(doc_mask[i],col)
+            if rect.shape[0]>0:
+                textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,textdoc,style_p,style_i,img_quality,col)
             
     textdoc.save(name.replace(".pdf",".odt"))
     doc_mask.close()
     doc_text.close()
-    
+
 def run():
-	parser=argparse.ArgumentParser(
-		description='''Extract highlighted text and framed images from PDF(s) generated with reMarkable tablet to Openoffice text document. Highlighted text will be exported as text. Framed areas will be cropped as images.''',
-		epilog="""  biff  Copyright (C) 2020  Louis DELMAS
-		This program comes with ABSOLUTELY NO WARRANTY.
-		This is free software, and you are welcome to redistribute it
-		under certain conditions; see COPYING for details.""")
-	parser.add_argument('pdf', nargs='*', help='PDF files')
-	args=parser.parse_args()
+    parser=argparse.ArgumentParser(description='''Extract highlighted text and framed images from PDF(s) generated with reMarkable tablet to Openoffice text document. Highlighted text will be exported as text. Framed areas will be cropped as images.''',
+                                   epilog="""  biff  Copyright (C) 2020  Louis DELMAS
+                                   This program comes with ABSOLUTELY NO WARRANTY.
+                                   This is free software, and you are welcome to redistribute it
+                                   under certain conditions; see COPYING for details.""",)
+    parser.add_argument('pdf', nargs='*', help='PDF files',)
+    parser.add_argument('-c', '--two-columns', help='For two-colums pdf, parse colums from left to right',action='store_true',)
+    parser.add_argument('-q','--quality',help='Quality of extracted images, default=2 higher values for higher quality', type=int, default=2,)
 
-	for i in range(1,len(argv)):
-		if argv[i].endswith(".pdf"):
-			print(f"converting {argv[i]} ...")
-			extract_highlight_odf(argv[i])
-		else:
-			print(f"{argv[i]} is not a pdf")
+    args=parser.parse_args()
+    print(args)
 
+    for i in range(len(args.pdf)):
+        if not os.path.exists(args.pdf[i]):
+            parser.error(f'The file "{args.pdf[i]}" does not exist.')
+        if args.pdf[i].endswith(".pdf"):
+            print(f"converting {args.pdf[i]} ...")
+            extract_highlight_odf(args.pdf[i],args.quality,args.two_columns)
+        else:
+            print(f"{args.pdf[i]} is not a pdf")
+
+run()

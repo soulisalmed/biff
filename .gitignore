@@ -2,3 +2,8 @@ venv
 win-dist
 odt.png
 pdf.png
+notebooks
+__pycache__
+__init__.pyc
+.ipynb_checkpoints
+
