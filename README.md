@@ -46,10 +46,10 @@ optional arguments:
 
 ```
 
-For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v1.0).	
+For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v2.0).	
 On the command line (cmd.exe):		
 ```
-biff_v1.0.exe my_highlighted.pdf
+biff_v2.0.exe my_highlighted.pdf
 ```
 	
 
