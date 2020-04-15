@@ -1,3 +1,4 @@
+.gitignore
 venv
 win-dist
 odt.png
