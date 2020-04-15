@@ -20,8 +20,8 @@
 
 from fitz import open as fitzopen
 from fitz import Rect , Matrix
-from cv2 import dilate , erode,  findContours,  imdecode,  boundingRect,  RETR_CCOMP,  CHAIN_APPROX_SIMPLE
-from numpy import ones,  empty,  lexsort,  frombuffer, uint8
+from cv2 import dilate , erode,  subtract, findContours,  imdecode,  boundingRect, rectangle, RETR_CCOMP,  CHAIN_APPROX_SIMPLE
+from numpy import ones,  empty,  zeros_like, lexsort,  frombuffer, uint8
 from operator import itemgetter
 from itertools import groupby
 from re import sub
@@ -72,21 +72,53 @@ def Page_Get_Rects(page,col):
     pix=pix.getPNGData()
     nparr = frombuffer(pix, uint8)
     img = 255-imdecode(nparr,0)
-    kernel = ones((3,3), uint8)
-    #strqtegy is now to not print images too small
+    
+    #strategy is now to not print images too small
+    #kernel = ones((3,3), uint8)
     #img=dilate(img,kernel,iterations = 2)
     #img=erode(img,kernel,iterations = 2)
     contour,hierarchy = findContours(img,RETR_CCOMP,CHAIN_APPROX_SIMPLE)
+    
     nb_contour=len(contour)
     rects=empty((nb_contour,4))
     rects_sorted=empty((nb_contour,4))
     hierarchy_sorted=empty((nb_contour,4))
     
+    #image with filled bounding rects
+    img_rects=zeros_like(img)
+        
     for i in range(nb_contour):
         rects[i] = boundingRect(contour[i])
+        x,y,w,h=rects[i].astype(int)
+        img_rects = rectangle(img_rects,(x,y),(x+w,y+h),255,-1)
+        
+    #some dilations of initial images to isolate part of the bounding rects that were not highlighted
+    kernelh = ones((1,3), uint8)
+    img=dilate(img,kernelh,iterations = 10)
+    kernelv = ones((3,1), uint8)
+    img=dilate(img,kernelv,iterations = 10)
+
+    img3=subtract(img_rects,img)
+    #dilate the rectangles to exclude
+    img3=dilate(img3,kernelv,iterations = 10)   
+    #contours to exclude
+    Xcontour,Xhierarchy = findContours(img3,RETR_CCOMP,CHAIN_APPROX_SIMPLE)
+    
+    nb_Xcontour=len(Xcontour)
+    Xrects=empty((nb_Xcontour,4))
+    #bounding box of contours to exclude  
+    for i in range(nb_Xcontour):
+        Xrects[i] = boundingRect(Xcontour[i])      
+        
+        
+        
     rects[:,2]=rects[:,0]+rects[:,2]
     rects[:,3]=rects[:,1]+rects[:,3]
     ind_sorted=lexsort((rects[:,0],rects[:,1]))
+    
+    Xrects[:,2]=Xrects[:,0]+Xrects[:,2]
+    Xrects[:,3]=Xrects[:,1]+Xrects[:,3]
+    #no need to sort excluded contours we'll just iterate over all
 
     for i in range(nb_contour):
         rects_sorted[i]=rects[ind_sorted[i]]
@@ -95,8 +127,10 @@ def Page_Get_Rects(page,col):
     if col==2:
         rects_sorted[:,0]+=x1
         rects_sorted[:,2]+=x1
+        Xrects[:,0]+=x1
+        Xrects[:,2]+=x1
         
-    return rects_sorted,hierarchy_sorted
+    return rects_sorted,hierarchy_sorted,Xrects
 
 def Page_Rect_get_Text(doc,page_num,rects,output):
     page=doc[page_num]
@@ -114,7 +148,7 @@ def Page_Rect_get_Text(doc,page_num,rects,output):
             output.write("\n")
 
 
-def Page_Rect_get_Text_odf(doc,page_num,rects,hierarchy,output,style_p,style_i,img_quality,col):
+def Page_Rect_get_Text_odf(doc,page_num,rects,hierarchy,Xrects,output,style_p,style_i,img_quality,col):
     page=doc[page_num]
     words = page.getText("words")
     output.text.addElement(P(stylename=style_p,text="_"*60))
@@ -125,7 +159,19 @@ def Page_Rect_get_Text_odf(doc,page_num,rects,hierarchy,output,style_p,style_i,i
     for i in range(rects.shape[0]):
         if hierarchy[i,3]==-1:
             rect=Rect(rects[i,0],rects[i,1],rects[i,2],rects[i,3])
-            mywords = [w for w in words if Rect(w[:4]) in rect]
+            allwords = [w for w in words if Rect(w[:4]) in rect]
+            # iterate over all rects to exclude
+            mywords=[]
+            for w in allwords:
+                exclude=0
+                for Xrect in Xrects:
+                    xg=(w[0]+w[2])/2
+                    yg=(w[1]+w[3])/2
+                    if Rect(Xrect).contains((xg,yg)):
+                        exclude=1
+                if exclude==0:
+                    mywords.append(w)
+
             mywords.sort(key=itemgetter(3, 0))  # sort by y1, x0 of the word rect
             group = groupby(mywords, key=itemgetter(3))
             
@@ -202,15 +248,15 @@ def extract_highlight_odf(name,img_quality,two_col):
         if two_col==True:
             #colonnes
             for col in [1,2]:
-                rect,hierarchy=Page_Get_Rects(doc_mask[i],col)
+                rect,hierarchy,Xrects=Page_Get_Rects(doc_mask[i],col)
 
                 if rect.shape[0]>0:
-                    textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,textdoc,style_p,style_i,img_quality,col)
+                    textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,Xrects,textdoc,style_p,style_i,img_quality,col)
         else:
             col=0
-            rect,hierarchy=Page_Get_Rects(doc_mask[i],col)
+            rect,hierarchy,Xrects=Page_Get_Rects(doc_mask[i],col)
             if rect.shape[0]>0:
-                textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,textdoc,style_p,style_i,img_quality,col)
+                textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,Xrects,textdoc,style_p,style_i,img_quality,col)
             
     textdoc.save(name.replace(".pdf",".odt"))
     doc_mask.close()

@@ -7,7 +7,8 @@ Extract text and images from highlighted pdf generated with reMarkable tablet.
 ### Version 2
  * Add an option for two columns pdf.
  * Add an option to increase quality of cropped images.
- * Improvements on some artifacts
+ * Improvements on some artifacts (before the whole line was extracted when only a part of if was highlighted)
+ * New Windows executable (v2)
 		
 ## Installation and usage	
 
