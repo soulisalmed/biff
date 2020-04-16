@@ -33,17 +33,26 @@ import argparse
 from sys import argv
 import os
 
-def Page_Get_Highlights(doc,doc_text,page):
-    cont=b""
-    page=doc[page]
-    for xref in page._getContents():
-        try:
+def Page_Get_Highlights(doc,doc_text):
+    
+    for xref in range(1,doc.xrefLength()):
+        cont=b""
+        #try:
+        #    cont=doc.xrefStream(xref)
+        #except:
+        #    continue
+        if doc.isStream(xref):
             cont=doc.xrefStream(xref)
-        except:
-            continue
-
-        if b"1 0.952941 0.658824 RG" in cont:
-            cont=cont.replace(b"1 0.952941 0.658824 RG",b"0 0 0 RG")
+        else:
+            continue       
+        
+        # different shades of yellow
+        yellows=[b"1 0.952941 0.658824 RG",b"1 1 0 RG"]
+        is_yellow=[True if y in cont else False for y in yellows]
+        ind_yellow=[i for i in range(2) if is_yellow[i]==True]
+        
+        if len(ind_yellow)>0:
+            cont=cont.replace(yellows[ind_yellow[0]],b"0 0 0 RG")
             cont=cont.replace(b"gs",b" ")
             #cont=re.sub(b"1 0 0 1 (.*) (.*) cm",b"1 0 0 1 0 0 cm",cont)
             cont=sub(b"q\n(.*) 0 0 (.*) (.*) (.*) cm",b"1 0 0 1 0 0 cm",cont)
@@ -240,10 +249,12 @@ def extract_highlight_odf(name,img_quality,two_col):
     
     #insert pdf file name
     textdoc.text.addElement(P(stylename=style_p,text=f"{name}\n\n"))
-     
+    
+    #isolate highlights in _mask and text in _text
+    doc_mask,doc_text=Page_Get_Highlights(doc_mask,doc_text)
+    
+    #iterate over pages to create rectangles to extract
     for i in range(nb_pages):
-        #isolate highlights in _mask and text in _text
-        doc_mask,doc_text=Page_Get_Highlights(doc_mask,doc_text,i)
         
         if two_col==True:
             #colonnes
@@ -279,7 +290,7 @@ def run():
         if not os.path.exists(args.pdf[i]):
             parser.error(f'The file "{args.pdf[i]}" does not exist.')
         if args.pdf[i].endswith(".pdf"):
-            print(f"converting {args.pdf[i]} ...")
+            print(f"Converting {args.pdf[i]} ...")
             extract_highlight_odf(args.pdf[i],args.quality,args.two_columns)
         else:
             print(f"{args.pdf[i]} is not a pdf")
