@@ -18,17 +18,26 @@ biff requires the following modules :
   * numpy
   * odfpy
 
-biff needs Python 3
+biff needs Python 3/pip3
 
 ```
-$ git clone https://github.com/soulisalmed/biff.git			
-$ cd biff		
-$ pip3 install -r requirements.txt					
-$ python3 -m biff my_highlighted.pdf			
+$ git clone https://github.com/soulisalmed/biff.git					
+```			
+Install the dependencies. It is recommended to use a virtual environment:
+```
+$ cd biff
+$ python3 -m venv venv
+$ source ./venv/bin/activate
+$ pip install -r requirements.txt	
+```		
+To run Biff :
+```		
+$ source <biff folder>/venv/bin/activate				
+$ python -m biff my_highlighted.pdf			
 ```
 Usage:
 ```
-usage: __main__.py [-h] [-c] [-q QUALITY] [pdf [pdf ...]]
+usage: biff [-h] [-c] [-q QUALITY] [pdf [pdf ...]]
 
 Extract highlighted text and framed images from PDF(s) generated with
 reMarkable tablet to Openoffice text document. Highlighted text will be

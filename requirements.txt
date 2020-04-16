@@ -2,4 +2,4 @@ defusedxml==0.6.0
 numpy==1.18.2
 odfpy==1.4.1
 opencv-python==4.2.0.34
-PyMuPDF==1.16.16
+PyMuPDF==1.16.17
