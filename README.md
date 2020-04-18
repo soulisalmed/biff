@@ -48,17 +48,17 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c, --two-columns     For two-columns pdf, parse colums from left to right
+  -c, --two-columns     For two-columns pdf, parse columns from left to right
   -q QUALITY, --quality QUALITY
                         Quality of extracted images, default=2 higher values
                         for higher quality
 
 ```
 
-For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v2.0).	
+For Windows users, you can download executables in [releases](https://github.com/soulisalmed/biff/releases/tag/v2.1).	
 On the command line (cmd.exe):		
 ```
-biff_v2.0.exe my_highlighted.pdf
+biff_v2.1.exe my_highlighted.pdf
 ```
 	
 

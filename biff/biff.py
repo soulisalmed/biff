@@ -284,7 +284,7 @@ def run():
     parser.add_argument('-q','--quality',help='Quality of extracted images, default=2 higher values for higher quality', type=int, default=2,)
 
     args=parser.parse_args()
-    print(args)
+    #print(args)
 
     for i in range(len(args.pdf)):
         if not os.path.exists(args.pdf[i]):
