@@ -280,7 +280,7 @@ def run():
                                    This is free software, and you are welcome to redistribute it
                                    under certain conditions; see COPYING for details.""",)
     parser.add_argument('pdf', nargs='*', help='PDF files',)
-    parser.add_argument('-c', '--two-columns', help='For two-columns pdf, parse colums from left to right',action='store_true',)
+    parser.add_argument('-c', '--two-columns', help='For two-columns pdf, parse columns from left to right',action='store_true',)
     parser.add_argument('-q','--quality',help='Quality of extracted images, default=2 higher values for higher quality', type=int, default=2,)
 
     args=parser.parse_args()
