@@ -5,7 +5,7 @@ Extract text and images from highlighted pdf generated with reMarkable tablet.
 ## Versions
 
 ### Version 2.2
- * Creation of an UI (Biff.py) 	
+ * Creation of an UI (Biff_UI.py) 	
  * Creation of Linux and Windows executables (see releases)
 
 ### Version 2.1
