@@ -194,18 +194,20 @@ def Page_Rect_get_Text_odf(doc,page_num,rects,hierarchy,Xrects,output,style_p,st
 
             clip = Rect(rects[i,0],rects[i,1],rects[i,2],rects[i,3])
             #taking into account quality
-            pix = page.getPixmap(matrix=Matrix(img_quality,img_quality),clip=clip)
+            img_qual=img_quality/50.
+            
+            pix = page.getPixmap(matrix=Matrix(img_qual,img_qual),clip=clip)
             
             name_image=f"Pictures/image-{page.number}-{col}{i}.png"
             pix_png=pix.getPNGData()
             h=pix.height/pix.xres
             w=pix.width/pix.yres
             #if quality is larger than 2 keep the frame the same as if it was 2
-            h*=2/img_quality
-            w*=2/img_quality
+            h*=2/img_qual
+            w*=2/img_qual
             #if image is too small (h<20px) it is probably an artifact
             #so do not print it
-            if pix.height*2/img_quality>20:
+            if pix.height*2/img_qual>20:
                 output.text.addElement(P(stylename=style_p,text=""))
                 out_img=P()
                 frame=Frame(stylename=style_i, width=f"{w}in",height=f"{h}in",anchortype="paragraph")
@@ -230,7 +232,7 @@ def extract_highlight(name):
     output.close()
 """
 
-def extract_highlight_odf(name,img_quality,two_col):
+def extract_highlight_odf(name,img_quality,two_col,output_folder=None):
     textdoc = OpenDocumentText()
     doc_mask=fitzopen(name)
     doc_text=fitzopen(name)
@@ -268,8 +270,13 @@ def extract_highlight_odf(name,img_quality,two_col):
             rect,hierarchy,Xrects=Page_Get_Rects(doc_mask[i],col)
             if rect.shape[0]>0:
                 textdoc=Page_Rect_get_Text_odf(doc_text,i,rect,hierarchy,Xrects,textdoc,style_p,style_i,img_quality,col)
-            
-    textdoc.save(name.replace(".pdf",".odt"))
+    if output_folder is not None:
+        basename=os.path.basename(name)
+        outname=basename.replace(".pdf",".odt")
+        outname=os.path.join(output_folder,outname)
+        textdoc.save(outname)
+    else:
+        textdoc.save(name.replace(".pdf",".odt"))
     doc_mask.close()
     doc_text.close()
 
@@ -281,16 +288,37 @@ def run():
                                    under certain conditions; see COPYING for details.""",)
     parser.add_argument('pdf', nargs='*', help='PDF files',)
     parser.add_argument('-c', '--two-columns', help='For two-columns pdf, parse columns from left to right',action='store_true',)
-    parser.add_argument('-q','--quality',help='Quality of extracted images, default=2 higher values for higher quality', type=int, default=2,)
+    parser.add_argument('-q','--quality',help='Extract resolution extracted images in PPI, default=150 PPI', type=int, default=100,)
+    parser.add_argument('-o','--output-folder',help='Output folder for ODT files', type=str,default=None)
 
     args=parser.parse_args()
     #print(args)
-
+    
     for i in range(len(args.pdf)):
         if not os.path.exists(args.pdf[i]):
             parser.error(f'The file "{args.pdf[i]}" does not exist.')
         if args.pdf[i].endswith(".pdf"):
+            if args.output_folder is None:
+                output_folder=None #args.pdf[i].replace(os.path.basename(args.pdf[i]),'')
+            elif os.path.exists(args.output_folder):
+                output_folder=args.output_folder
+                
             print(f"Converting {args.pdf[i]} ...")
-            extract_highlight_odf(args.pdf[i],args.quality,args.two_columns)
+            extract_highlight_odf(args.pdf[i],args.quality,args.two_columns,output_folder=output_folder)
         else:
             print(f"{args.pdf[i]} is not a pdf")
+            
+def gui(filename,input_folder,output_folder,img_quality,two_col):
+    if not os.path.exists(input_folder) or not os.path.exists(output_folder):
+        return f'The folder "{args.pdf[i]}" does not exist.'
+    
+    elif not os.path.exists(os.path.join(input_folder,filename)):
+        return f'The folder "{args.pdf[i]}" does not exist.'
+        
+    elif filename.endswith(".pdf"):
+        name=os.path.join(input_folder,filename)
+        extract_highlight_odf(name,img_quality,two_col,output_folder=output_folder)
+        return f"Converting {filename}...."
+    
+    else:
+        return f"{args.pdf[i]} is not a pdf"
