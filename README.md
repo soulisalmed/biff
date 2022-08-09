@@ -71,7 +71,7 @@ optional arguments:
 
 ```
 
-## Recommandations for pdf highlighting on the reMarkable tablet	
+## Recommendations for pdf highlighting on the reMarkable tablet	
 
   * On reMarkable, use the Highlighter. All the other tools will not (and should not) be detected by biff.
   * Make sure to cover all the text you want to extract. Partly covered text will not be extracted.
