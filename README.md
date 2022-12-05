@@ -17,7 +17,7 @@ Extract text and images from highlighted pdf generated with reMarkable tablet.
 ## Installation and usage	
 ### Excecutables with User Interface	
 
-For Windows and Linux users, you can download executables with User interface in [releases](https://github.com/soulisalmed/biff/releases/tag/v2.2).
+For Windows and Linux users, you can download executables with User interface in [releases](https://github.com/soulisalmed/biff/releases/tag/2.2).
 	
 ### Command line    
 biff requires the following modules : 		
